@@ -7,7 +7,12 @@ import path from 'node:path';
 const execFileP = promisify(execFile);
 
 // Each entry defines how to invoke the agent in non-interactive "one-shot" mode.
-// `buildArgs(prompt, imagePaths)` returns argv for the child process.
+// `buildArgs(prompt, imagePaths, extraAllowedDirs)` returns argv for the child
+// process. `extraAllowedDirs` is a list of absolute directories the agent must
+// be permitted to read files from (skill seeds, design-system specs) that live
+// outside the project cwd. Currently only Claude Code wires this through
+// (`--add-dir`); other agents either inherit broader access or run with cwd
+// boundaries we can't widen via flags.
 // `streamFormat` hints to the daemon how to interpret stdout:
 //   - 'claude-stream-json' : line-delimited JSON emitted by Claude Code's
 //     `--output-format stream-json`. Daemon parses it into typed events
@@ -19,14 +24,23 @@ export const AGENT_DEFS = [
     name: 'Claude Code',
     bin: 'claude',
     versionArgs: ['--version'],
-    buildArgs: (prompt) => [
-      '-p',
-      prompt,
-      '--output-format',
-      'stream-json',
-      '--verbose',
-      '--include-partial-messages',
-    ],
+    buildArgs: (prompt, _imagePaths, extraAllowedDirs = []) => {
+      const args = [
+        '-p',
+        prompt,
+        '--output-format',
+        'stream-json',
+        '--verbose',
+        '--include-partial-messages',
+      ];
+      const dirs = (extraAllowedDirs || []).filter(
+        (d) => typeof d === 'string' && d.length > 0,
+      );
+      if (dirs.length > 0) {
+        args.push('--add-dir', ...dirs);
+      }
+      return args;
+    },
     streamFormat: 'claude-stream-json',
   },
   {

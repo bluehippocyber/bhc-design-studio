@@ -769,7 +769,17 @@ export async function startServer({ port = 7456 } = {}) {
       safeImages.length ? `\n\n${safeImages.map((p) => `@${p}`).join(' ')}` : '',
     ].join('');
 
-    const args = def.buildArgs(composed, safeImages);
+    // Skill seeds (`skills/<id>/assets/template.html`) and design-system
+    // specs (`design-systems/<id>/DESIGN.md`) live outside the project cwd.
+    // The composed system prompt asks the agent to Read them via absolute
+    // paths in the skill-root preamble — without an explicit allowlist,
+    // Claude Code blocks those reads (issue #6: "no permission to read
+    // skills template"). We surface both roots so any agent that honours
+    // `--add-dir` can resolve those side files.
+    const extraAllowedDirs = [SKILLS_DIR, DESIGN_SYSTEMS_DIR].filter(
+      (d) => fs.existsSync(d),
+    );
+    const args = def.buildArgs(composed, safeImages, extraAllowedDirs);
 
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache, no-transform');
