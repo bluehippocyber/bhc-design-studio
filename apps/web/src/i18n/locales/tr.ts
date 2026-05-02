@@ -383,7 +383,7 @@ export const tr: Dict = {
   'workspace.deleteFileConfirm': '"{name}"ı proje klasöründen sil?',
   'workspace.openFromDesignFiles': 'bir dosya aç',
   'workspace.designFilesLink': 'Tasarım Dosyaları',
-  'workspace.loadingSketch': 'Taslak yükleniyor…',',
+  'workspace.loadingSketch': 'Taslak yükleniyor…
   'designFiles.title': 'Tasarım Dosyaları',
   'designFiles.upload': 'Dosyaları yükle',
   'designFiles.pasteText': 'Metin dosyası olarak yapıştır',
