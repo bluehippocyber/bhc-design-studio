@@ -383,7 +383,7 @@ export const tr: Dict = {
   'workspace.deleteFileConfirm': '"{name}"ı proje klasöründen sil?',
   'workspace.openFromDesignFiles': 'bir dosya aç',
   'workspace.designFilesLink': 'Tasarım Dosyaları',
-  'workspace.loadingSketch': 'Taslak yükleniyor…
+  'workspace.loadingSketch': 'Taslak yükleniyor…',
   'designFiles.title': 'Tasarım Dosyaları',
   'designFiles.upload': 'Dosyaları yükle',
   'designFiles.pasteText': 'Metin dosyası olarak yapıştır',
@@ -636,4 +636,14 @@ export const tr: Dict = {
   'sketch.clear': 'Temizle',
   'sketch.close': 'Kapat',
   'sketch.textPrompt': 'Metin:',
+  'newproj.promptTemplateLabel': 'Referans şablon',
+  'newproj.promptTemplateNoneTitle': 'Yok — kendi briefinizi yazın',
+  'newproj.promptTemplateNoneSub': 'Galeriyi atlayın, kendi briefinizi tanımlayın',
+  'newproj.promptTemplateRefSub': 'Referans şablon',
+  'newproj.promptTemplateSearch': 'Şablon ara…',
+  'newproj.promptTemplateEmpty': 'Bu yüzey için henüz şablon yüklenmedi.',
+  'newproj.promptTemplateOptimizeHint': 'İstediğinizi düzenleyin — değişiklikleriniz temsilcinin brifine aktarılır.',
+  'newproj.promptTemplateBodyLabel': 'İstem (ayarlayabilirsiniz)',
+  'newproj.promptTemplateBodyEmpty': 'Boş gövde — temsilci şablon referansı almayacak.',
+  'promptTemplates.retry': 'Tekrar dene',
 };
