@@ -16,6 +16,11 @@ import type {
   UpdateDeployConfigRequest,
 } from '../types';
 import type { ArtifactManifest } from '../artifacts/types';
+import {
+  localStoreFile,
+  localListFiles,
+  resolveLocalUrl,
+} from '../state/localFiles';
 
 export async function fetchAgents(): Promise<AgentInfo[]> {
   try {
@@ -216,17 +221,37 @@ export async function checkDeploymentLink(
 // Project files — all paths are scoped under .od/projects/<id>/ on disk.
 
 export async function fetchProjectFiles(projectId: string): Promise<ProjectFile[]> {
+  let daemonFiles: ProjectFile[] = [];
   try {
     const resp = await fetch(`/api/projects/${encodeURIComponent(projectId)}/files`);
-    if (!resp.ok) return [];
-    const json = (await resp.json()) as { files: ProjectFile[] };
-    return json.files ?? [];
+    if (resp.ok) {
+      const json = (await resp.json()) as { files: ProjectFile[] };
+      daemonFiles = json.files ?? [];
+    }
+  } catch { /* fall through */ }
+
+  // Merge local IndexedDB files (daemon-offline fallback)
+  try {
+    const localFiles = await localListFiles(projectId);
+    const localProjectFiles: ProjectFile[] = localFiles.map((f) => ({
+      name: f.name,
+      path: `local://${projectId}/${f.name}`,
+      kind: (looksLikeImage(f.name) ? 'image' : 'document') as ProjectFile['kind'],
+      size: f.size,
+      updatedAt: Date.now(),
+    }));
+    // Merge: daemon files take precedence for same name
+    const daemonNames = new Set(daemonFiles.map((f) => f.name));
+    return [...daemonFiles, ...localProjectFiles.filter((f) => !daemonNames.has(f.name))];
   } catch {
-    return [];
+    return daemonFiles;
   }
 }
 
 export function projectFileUrl(projectId: string, name: string): string {
+  // Return cached object URL for locally-stored files
+  const localUrl = resolveLocalUrl(`local://${projectId}/${name}`);
+  if (localUrl) return localUrl;
   return projectRawUrl(projectId, name);
 }
 
@@ -395,17 +420,21 @@ export async function uploadProjectFiles(
       );
 
       if (!resp.ok) {
-        const payload = (await resp.json().catch(() => null)) as
-          | { code?: string; error?: string }
-          | null;
-        error = payload?.error ?? `upload failed (${resp.status})`;
+        // Daemon offline — store files locally in IndexedDB instead of failing
         for (const f of batch) {
-          failed.push({ name: f.name, code: payload?.code, error: error });
+          try {
+            await localStoreFile(projectId, f.name, f);
+            uploaded.push({
+              path: `local://${projectId}/${f.name}`,
+              name: f.name,
+              kind: looksLikeImage(f.name) ? 'image' : 'file',
+              size: f.size,
+            });
+          } catch (localErr) {
+            failed.push({ name: f.name, error: String(localErr) });
+          }
         }
-        for (const f of remaining) {
-          failed.push({ name: f.name, code: payload?.code, error: error });
-        }
-        break;
+        continue; // process next batch locally too
       }
 
       const json = (await resp.json()) as {
