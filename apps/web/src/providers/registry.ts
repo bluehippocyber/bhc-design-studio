@@ -238,7 +238,8 @@ export async function fetchProjectFiles(projectId: string): Promise<ProjectFile[
       path: `local://${projectId}/${f.name}`,
       kind: (looksLikeImage(f.name) ? 'image' : 'document') as ProjectFile['kind'],
       size: f.size,
-      updatedAt: Date.now(),
+      mtime: Date.now(),
+      mime: looksLikeImage(f.name) ? 'image/png' : 'application/octet-stream',
     }));
     // Merge: daemon files take precedence for same name
     const daemonNames = new Set(daemonFiles.map((f) => f.name));
