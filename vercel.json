@@ -5,7 +5,7 @@
   "outputDirectory": "apps/web/out",
   "framework": null,
   "rewrites": [
-    { "source": "/api/anthropic/(.*)", "destination": "https://api.anthropic.com/$1" },
+    { "source": "/api/anthropic/:path*", "destination": "https://api.anthropic.com/:path*" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ]
 }
