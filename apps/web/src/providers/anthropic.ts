@@ -22,9 +22,24 @@ export interface StreamHandlers {
 }
 
 export function makeClient(cfg: AppConfig): Anthropic {
+  // When deployed on Vercel (or any non-localhost host), route API calls
+  // through our own /api/anthropic proxy to avoid CORS blocks on direct
+  // browser → api.anthropic.com connections.
+  const isLocalhost =
+    typeof window !== 'undefined' &&
+    (window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1');
+
+  const baseURL =
+    !cfg.baseUrl || cfg.baseUrl === 'https://api.anthropic.com'
+      ? isLocalhost
+        ? 'https://api.anthropic.com'
+        : `${window.location.origin}/api/anthropic`
+      : cfg.baseUrl;
+
   return new Anthropic({
     apiKey: cfg.apiKey,
-    baseURL: cfg.baseUrl || undefined,
+    baseURL,
     dangerouslyAllowBrowser: true,
   });
 }
