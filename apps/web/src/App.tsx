@@ -69,7 +69,7 @@ export function App() {
           alive
             ? fetchDesignSystems()
             : Promise.resolve([] as DesignSystemSummary[]),
-          alive ? listProjects() : Promise.resolve([] as Project[]),
+          listProjects(), // always load — falls back to localStorage when daemon is offline
           alive ? listTemplates() : Promise.resolve([] as ProjectTemplate[]),
           alive ? fetchPromptTemplates() : Promise.resolve([] as PromptTemplateSummary[]),
           alive ? fetchAppVersionInfo() : Promise.resolve(null),
@@ -271,7 +271,8 @@ export function App() {
   useEffect(() => {
     if (route.kind !== 'project') return;
     if (activeProject) return;
-    if (!projects.length && !daemonLive) return;
+    // Don't bail when daemon is offline — localStorage projects still need recovery.
+    // Only skip if we already have the project in state.
     if (projects.some((p) => p.id === route.projectId)) return;
     let cancelled = false;
     (async () => {
